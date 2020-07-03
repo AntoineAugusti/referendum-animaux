@@ -29,15 +29,30 @@ def requests_retry_session(
     return session
 
 
+def count_parlementaires():
+    r = requests_retry_session().get(
+        "https://referendumpourlesanimaux.fr/parlementaires"
+    )
+    r.raise_for_status()
+
+    nb_deputes = r.text.count("http://www2.assemblee-nationale.fr/deputes/fiche/")
+    nb_senateurs = r.text.count("https://www.senat.fr/senateur/")
+
+    return nb_deputes, nb_senateurs
+
+
 r = requests_retry_session().get("https://referendumpourlesanimaux.fr/counter")
 r.raise_for_status()
 data = r.json()
 
 date = datetime.datetime.utcnow().isoformat()
 
+nb_deputes, nb_senateurs = count_parlementaires()
+
 hourly_data = {
     "date": date,
-    "nb_parlementaires": None,
+    "nb_deputes": nb_deputes,
+    "nb_senateurs": nb_senateurs,
     "nb_soutiens": data["counter"],
 }
 
