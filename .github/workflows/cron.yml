@@ -26,6 +26,23 @@ jobs:
       run: pip install -r requirements.txt
     - name: Run main
       run: python main.py
+    - name: Push to data.gouv.fr
+      run: |
+        curl -H "Accept:application/json" \
+          -H "X-Api-Key:$DATA_GOUV_API_KEY" \
+          -F "file=@data/data.csv" \
+          -X POST $API/datasets/$DATASET_ID/resources/$RESOURCE/upload/
+        export DATE_END=`date +%Y-%m-%d`
+        curl -H "Accept:application/json" \
+          -H 'Content-Type: application/json'\
+          -H "X-Api-Key:$DATA_GOUV_API_KEY" \
+          --data-binary $'{"temporal_coverage":{"start":"2020-07-03","end":"'"$DATE_END"'"}}' \
+          -X PUT $API/datasets/$DATASET_ID/
+      env:
+        DATA_GOUV_API_KEY: ${{ secrets.DATAGOUV_API_KEY }}
+        API: "https://www.data.gouv.fr/api/1"
+        DATASET_ID: "5eff5a327adaf530158594a1"
+        RESOURCE: "b1ff7e2d-49c6-4202-82ec-9334ce37497d"
     - name: Commit files
       run: |
         git config --local user.email "actions@github.com"
